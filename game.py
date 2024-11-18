@@ -4,6 +4,8 @@ import sys
 
 pygame.init()
 
+PIXEL_SIZE = 3
+
 COLOR_WHITE = pygame.Color(255, 255, 255)
 COLOR_BLACK = pygame.Color(0, 0, 0)
 
@@ -32,17 +34,17 @@ def handle_events() -> None:
             sys.exit(0)
         match event.key:
             case pygame.K_UP:
-                state.cursor.y -= 1
+                state.cursor.y -= PIXEL_SIZE
             case pygame.K_DOWN:
-                state.cursor.y += 1
+                state.cursor.y += PIXEL_SIZE
             case pygame.K_LEFT:
-                state.cursor.x -= 1
+                state.cursor.x -= PIXEL_SIZE
             case pygame.K_RIGHT:
-                state.cursor.x += 1
+                state.cursor.x += PIXEL_SIZE
 
 
 def render_game(lcd: pygame.Surface) -> None:
-    lcd.set_at(astuple(state.cursor), COLOR_BLACK)
+    pygame.draw.rect(lcd, COLOR_BLACK, pygame.Rect(astuple(state.cursor), (PIXEL_SIZE, PIXEL_SIZE)))
 
     pygame.display.update()
 
