@@ -6,6 +6,9 @@ pygame.init()
 
 PIXEL_SIZE = 3
 
+DIR_DOWN = pygame.math.Vector2(0, 1)
+DIR_RIGHT = pygame.math.Vector2(1, 0)
+
 COLOR_WHITE = pygame.Color(255, 255, 255)
 COLOR_BLACK = pygame.Color(0, 0, 0)
 
@@ -14,16 +17,12 @@ COLOR_TEXT = COLOR_BLACK
 
 FONT = pygame.font.Font(None, 20)
 
-@dataclass
-class Coords:
-    x: int
-    y: int
 
 @dataclass
 class GameState:
-    cursor: Coords
+    cursor: pygame.math.Vector2
 
-state = GameState(Coords(160, 120))
+state = GameState(pygame.math.Vector2(160, 120))
 
 
 def handle_events() -> None:
@@ -32,19 +31,22 @@ def handle_events() -> None:
         if (event.key == pygame.K_q): 
             pygame.quit()
             sys.exit(0)
+        if (event.key == pygame.K_c):
+            # TODO implement clearing screen
+            pass
         match event.key:
             case pygame.K_UP:
-                state.cursor.y -= PIXEL_SIZE
+                state.cursor -= PIXEL_SIZE * DIR_DOWN
             case pygame.K_DOWN:
-                state.cursor.y += PIXEL_SIZE
+                state.cursor += PIXEL_SIZE * DIR_DOWN
             case pygame.K_LEFT:
-                state.cursor.x -= PIXEL_SIZE
+                state.cursor -= PIXEL_SIZE * DIR_RIGHT
             case pygame.K_RIGHT:
-                state.cursor.x += PIXEL_SIZE
+                state.cursor += PIXEL_SIZE * DIR_RIGHT
 
 
 def render_game(lcd: pygame.Surface) -> None:
-    pygame.draw.rect(lcd, COLOR_BLACK, pygame.Rect(astuple(state.cursor), (PIXEL_SIZE, PIXEL_SIZE)))
+    pygame.draw.rect(lcd, COLOR_BLACK, pygame.Rect(state.cursor, (PIXEL_SIZE, PIXEL_SIZE)))
 
     pygame.display.update()
 
