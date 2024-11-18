@@ -1,5 +1,6 @@
 import pygame
-
+from dataclasses import dataclass, astuple
+import sys
 
 pygame.init()
 
@@ -11,25 +12,45 @@ COLOR_TEXT = COLOR_BLACK
 
 FONT = pygame.font.Font(None, 20)
 
-state = {'key': ''} # TODO replace with dataclass
+@dataclass
+class Coords:
+    x: int
+    y: int
+
+@dataclass
+class GameState:
+    cursor: Coords
+
+state = GameState(Coords(160, 120))
 
 
 def handle_events() -> None:
     for event in pygame.event.get():
         if (event.type != pygame.KEYDOWN): continue
-        if (event.key == ord('q')): pygame.quit()
-        state['key'] = chr(event.key)
+        if (event.key == pygame.K_q): 
+            pygame.quit()
+            sys.exit(0)
+        match event.key:
+            case pygame.K_UP:
+                state.cursor.y -= 1
+            case pygame.K_DOWN:
+                state.cursor.y += 1
+            case pygame.K_LEFT:
+                state.cursor.x -= 1
+            case pygame.K_RIGHT:
+                state.cursor.x += 1
 
 
 def render_game(lcd: pygame.Surface) -> None:
-    lcd.fill(COLOR_BACKGROUND)
-    lcd.blit(FONT.render(state['key'], True, COLOR_TEXT), (0, 0))
-    pygame.display.update()
+    lcd.set_at(astuple(state.cursor), COLOR_BLACK)
 
+    pygame.display.update()
 
 
 def main() -> None:
     lcd = pygame.display.set_mode((320, 240))
+
+    lcd.fill(COLOR_BACKGROUND)
 
     while True:
         handle_events()
