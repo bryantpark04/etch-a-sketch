@@ -21,19 +21,19 @@ FONT = pygame.font.Font(None, 20)
 @dataclass
 class GameState:
     cursor: pygame.math.Vector2
+    reset_screen: bool = False
 
 state = GameState(pygame.math.Vector2(160, 120))
 
 
 def handle_events() -> None:
     for event in pygame.event.get():
-        if (event.type != pygame.KEYDOWN): continue
-        if (event.key == pygame.K_q): 
+        if event.type != pygame.KEYDOWN: continue
+        if event.key == pygame.K_q: 
             pygame.quit()
             sys.exit(0)
-        if (event.key == pygame.K_c):
-            # TODO implement clearing screen
-            pass
+        if event.key == pygame.K_c:
+            state.reset_screen = True
         match event.key:
             case pygame.K_UP:
                 state.cursor -= PIXEL_SIZE * DIR_DOWN
@@ -47,6 +47,10 @@ def handle_events() -> None:
 
 def render_game(lcd: pygame.Surface) -> None:
     pygame.draw.rect(lcd, COLOR_BLACK, pygame.Rect(state.cursor, (PIXEL_SIZE, PIXEL_SIZE)))
+
+    if state.reset_screen:
+        lcd.fill(COLOR_WHITE)
+        state.reset_screen = False
 
     pygame.display.update()
 
