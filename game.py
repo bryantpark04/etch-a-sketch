@@ -1,5 +1,6 @@
 import pygame
 from dataclasses import dataclass, astuple
+import glob
 import sys
 
 pygame.init()
@@ -34,8 +35,18 @@ def handle_events(lcd: pygame.Surface) -> None:
         if event.key == pygame.K_c:
             lcd.fill(COLOR_WHITE)
         if event.key == pygame.K_s:
-            file_name: str = f"{state.cursor[0]}_{state.cursor[1]}.bmp"
-            pygame.image.save(lcd, file_name)
+            filename: str = f"{state.cursor[0]}_{state.cursor[1]}.bmp"
+            pygame.image.save(lcd, filename)
+        if event.key == pygame.K_l:
+            bmp_files = glob.glob("*.bmp")
+            if not bmp_files:
+                continue
+            filename = bmp_files[0]
+            img = pygame.image.load(filename)
+            pygame.Surface.blit(lcd, img, (0, 0))
+            new_cursor_pos = list(map(float, filename[:filename.find(".bmp")].split('_')))
+            state.cursor = pygame.math.Vector2(*new_cursor_pos)
+            pygame.display.update()
         if event.key == pygame.K_UP:
             state.cursor -= PIXEL_SIZE * DIR_DOWN
         if event.key == pygame.K_DOWN:
