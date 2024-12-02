@@ -21,36 +21,33 @@ FONT = pygame.font.Font(None, 20)
 @dataclass
 class GameState:
     cursor: pygame.math.Vector2
-    reset_screen: bool = False
 
 state = GameState(pygame.math.Vector2(160, 120))
 
 
-def handle_events() -> None:
+def handle_events(lcd: pygame.Surface) -> None:
     for event in pygame.event.get():
         if event.type != pygame.KEYDOWN: continue
         if event.key == pygame.K_q: 
             pygame.quit()
             sys.exit(0)
         if event.key == pygame.K_c:
-            state.reset_screen = True
-        match event.key:
-            case pygame.K_UP:
-                state.cursor -= PIXEL_SIZE * DIR_DOWN
-            case pygame.K_DOWN:
-                state.cursor += PIXEL_SIZE * DIR_DOWN
-            case pygame.K_LEFT:
-                state.cursor -= PIXEL_SIZE * DIR_RIGHT
-            case pygame.K_RIGHT:
-                state.cursor += PIXEL_SIZE * DIR_RIGHT
+            lcd.fill(COLOR_WHITE)
+        if event.key == pygame.K_s:
+            file_name: str = f"{state.cursor[0]}_{state.cursor[1]}.bmp"
+            pygame.image.save(lcd, file_name)
+        if event.key == pygame.K_UP:
+            state.cursor -= PIXEL_SIZE * DIR_DOWN
+        if event.key == pygame.K_DOWN:
+            state.cursor += PIXEL_SIZE * DIR_DOWN
+        if event.key == pygame.K_LEFT:
+            state.cursor -= PIXEL_SIZE * DIR_RIGHT
+        if event.key == pygame.K_RIGHT:
+            state.cursor += PIXEL_SIZE * DIR_RIGHT
 
 
 def render_game(lcd: pygame.Surface) -> None:
     pygame.draw.rect(lcd, COLOR_BLACK, pygame.Rect(state.cursor, (PIXEL_SIZE, PIXEL_SIZE)))
-
-    if state.reset_screen:
-        lcd.fill(COLOR_WHITE)
-        state.reset_screen = False
 
     pygame.display.update()
 
@@ -61,7 +58,7 @@ def main() -> None:
     lcd.fill(COLOR_BACKGROUND)
 
     while True:
-        handle_events()
+        handle_events(lcd)
         render_game(lcd)
         
 
