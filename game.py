@@ -1,11 +1,12 @@
 import pygame
-from dataclasses import dataclass
 import time
 
 pygame.init()
 
 from functions import *
 from common import *
+
+state = GameState(pygame.math.Vector2(160, 120))
 
 if IS_RUNNING_ON_PI:
     import board
@@ -21,32 +22,12 @@ if IS_RUNNING_ON_PI:
     bus = smbus.SMBus(1)
     time.sleep(1)
 
-    clk_x = 19
-    dt_x = 26
-    clk_y = 21
-    dt_y = 6
 
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(clk_x, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.setup(dt_x, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.setup(clk_y, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.setup(dt_y, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
-    clkLastState_x = GPIO.input(clk_x)
-    clkLastState_y = GPIO.input(clk_y)
-    clkState_x = 0
-    dtState_x = 0
-    clkState_y = 0
-    dtState_y = 0
-
-
-@dataclass
-class GameState:
-    cursor: pygame.math.Vector2
-    color = 0
-    loaded_image = 0
-
-state = GameState(pygame.math.Vector2(160, 120))
+    for i in range(2):
+        GPIO.setup(clks[i], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(dts[i], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        state.clk_last_state[i] = GPIO.input(clks[i])
 
 
 def callback(channel, lcd):
@@ -61,6 +42,19 @@ def callback(channel, lcd):
     if channel == 27:
         quit()
 
+def read_rotary_encoders(i, state):
+    clk_state = GPIO.input(clks[i])
+    dt_state = GPIO.input(dts[i])
+    direction = 0
+    if clk_state != state.clk_last_state[i]:
+        if dt_state != clk_state:
+            direction = 1
+        else:
+            direction = -1
+    state.clk_last_state[i] = clk_state
+    if direction != 0:
+        state.loaded_image = 0
+    return direction
 
 def handle_events(lcd: pygame.Surface) -> None:
     if IS_RUNNING_ON_PI:
@@ -71,35 +65,8 @@ def handle_events(lcd: pygame.Surface) -> None:
         
         if acceleration > 5:
             clear_screen(lcd, state)
-
-        # TODO redo
-        counter_x = 0
-        counter_y = 0
-        clkState_x = GPIO.input(clk_x)
-        dtState_x = GPIO.input(dt_x)
-        if clkState_x != clkLastState_x:
-            if dtState_x != clkState_x:
-                counter_x += 1
-            else:
-                counter_x -= 1
-
-        clkLastState_x = clkState_x
-            
-        clkState_y = GPIO.input(clk_y)
-        dtState_y = GPIO.input(dt_y)
-        if clkState_y != clkLastState_y:
-            if dtState_y != clkState_y:
-                counter_y += 1
-            else:
-                counter_y -= 1
-            
-        clkLastState_y = clkState_y
         
-        state.cursor += PIXEL_SIZE * DIR_DOWN * counter_y + PIXEL_SIZE * DIR_RIGHT * counter_x
-
-        if counter_x or counter_y:
-            state.loaded_image = 0
-        
+        state.cursor += PIXEL_SIZE * DIR_DOWN * read_rotary_encoders(1, state) + PIXEL_SIZE * DIR_RIGHT * read_rotary_encoders(0, state)        
             
     for event in pygame.event.get():
         if event.type != pygame.KEYDOWN: continue
@@ -138,7 +105,7 @@ def main() -> None:
             GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(channel, GPIO.FALLING, callback=lambda c: callback(c, lcd), bouncetime=300)
 
-    clear_screen(lcd)
+    clear_screen(lcd, state)
 
     pygame.mouse.set_visible(False)
 
